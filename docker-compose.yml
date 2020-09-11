@@ -1,0 +1,39 @@
+version: '3'
+services:
+  app:
+    image: "beltzacaiplayappapi:dev"
+    build:
+      context: ./Api/Beltzac.AIPlay.App/
+      dockerfile: Beltzac.AIPlay.App.Api/Dockerfile
+    stdin_open: true
+    ports:
+        - 10000:80
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      
+  file:    
+    image: "beltzacaiplayfileapi:dev"
+    build:
+      context: ./File/Beltzac.AIPlay.File/
+      dockerfile: Beltzac.AIPlay.File.Api/Dockerfile
+    stdin_open: true
+    ports:
+        - 10001:80
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      
+  lip:    
+    image: "lip:dev"
+    build:
+      context: ./Lip
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+  queue:    
+    image: "rabbit-custom:dev"
+    build:
+      context: ./Queue
+      dockerfile: Dockerfile
+    ports:
+        - "15672:15672"
+        - "5672:5672"
