@@ -1,19 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Beltzac.AIPlay.App.Api.Helpers;
 using Beltzac.AIPlay.App.Api.Hubs;
-using DotNetCore.CAP;
+using Beltzac.AIPlay.App.Api.Workers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Beltzac.AIPlay.App.Api
 {
@@ -30,29 +24,9 @@ namespace Beltzac.AIPlay.App.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddHostedService<StatusUpdateWorker>();
+
             services.AddSwaggerGen();
-
-            services.AddCap(options =>
-            {
-                options.ConsumerThreadCount = 0;
-                options.UseInMemoryStorage();
-                options.UseRabbitMQ(opt => {
-                    opt.HostName = "queue";
-                    opt.ExchangeName = "lip";
-                });
-                options.UseDashboard();
-            });
-
-            services.AddCap(options =>
-            {
-                options.ConsumerThreadCount = 1;
-                options.UseInMemoryStorage();
-                options.UseRabbitMQ(opt => {
-                    opt.HostName = "queue";
-                    opt.ExchangeName = "status";
-                });
-                options.UseDashboard();
-            });
 
             services.Configure<KestrelServerOptions>(options =>
             {
@@ -69,6 +43,8 @@ namespace Beltzac.AIPlay.App.Api
             services.AddSignalR();
 
             services.AddSingleton<LipHub>();
+            services.AddSingleton<IRabbitMQHelper, RabbitMqHelper>();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -84,8 +60,6 @@ namespace Beltzac.AIPlay.App.Api
             app.UseRouting();
 
             app.UseAuthorization();
-
-            app.UseCapDashboard();
 
             app.UseEndpoints(endpoints =>
             {

@@ -5,6 +5,7 @@ services:
     build:
       context: ./Api/Beltzac.AIPlay.App/
       dockerfile: Beltzac.AIPlay.App.Api/Dockerfile
+    restart: unless-stopped
     stdin_open: true
     ports:
         - 10000:80
@@ -16,6 +17,7 @@ services:
     build:
       context: ./File/Beltzac.AIPlay.File/
       dockerfile: Beltzac.AIPlay.File.Api/Dockerfile
+    restart: unless-stopped
     stdin_open: true
     ports:
         - 10001:80
@@ -34,6 +36,7 @@ services:
     build:
       context: ./Queue
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
         - "15672:15672"
         - "5672:5672"

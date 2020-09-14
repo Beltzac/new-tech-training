@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Beltzac.AIPlay.App.Api.Apis;
 using Beltzac.AIPlay.App.Api.Contract;
+using Beltzac.AIPlay.App.Api.Helpers;
 using Beltzac.AIPlay.App.Api.Hubs;
-using DotNetCore.CAP;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Refit;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Beltzac.AIPlay.App.Api.Controllers
 {
@@ -20,11 +16,11 @@ namespace Beltzac.AIPlay.App.Api.Controllers
     [ApiController]
     public class LipController : ControllerBase
     {
-        private readonly ICapPublisher _capPublisher;
+        private readonly IRabbitMQHelper _bus;
         private readonly LipHub _hub;
-        public LipController(ICapPublisher capPublisher, LipHub hub)
+        public LipController(IRabbitMQHelper bus, LipHub hub)
         {
-            _capPublisher = capPublisher;
+            _bus = bus;
             _hub = hub;
         }
 
@@ -64,19 +60,15 @@ namespace Beltzac.AIPlay.App.Api.Controllers
                     IdRequest = idRequest
                 };
 
-                await _capPublisher.PublishAsync(nameof(Lip), message);
+                //TODO: colocar conexão no singleton e serializar dentro do helper
+                var connection = _bus.CreateConnection(_bus.GetConnectionFactory());
+                var json = JsonConvert.SerializeObject(message);
+                _bus.WriteMessageOnQueue(json, "lip", connection);
 
                 return Ok(idRequest);
             }
 
             return BadRequest();
-        }
-
-        [CapSubscribe(nameof(StatusUpdate))]
-        public async Task OnUpdateProcessingStatusAsync(StatusUpdate status)
-        {
-            Console.WriteLine($"Message received -> {status.ProcessId} {status.PercentageProcessed} {status.Message}");
-            await _hub.OnUpdateProcessingStatus(status);
         }
     }
 }
