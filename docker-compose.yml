@@ -40,3 +40,12 @@ services:
     ports:
         - "15672:15672"
         - "5672:5672"
+
+  web:    
+    image: "web:dev"
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+        - "10002:80"

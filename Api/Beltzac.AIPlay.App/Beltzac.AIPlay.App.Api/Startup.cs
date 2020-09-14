@@ -40,11 +40,21 @@ namespace Beltzac.AIPlay.App.Api
                 x.MultipartHeadersLengthLimit = int.MaxValue;
             });
 
+            services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+            {
+                builder
+                    .WithOrigins("http://localhost:10002/")
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            }));
+
+
             services.AddSignalR();
 
             services.AddSingleton<LipHub>();
             services.AddSingleton<IRabbitMQHelper, RabbitMqHelper>();
-            
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,6 +66,8 @@ namespace Beltzac.AIPlay.App.Api
             }
 
             //app.UseHttpsRedirection();
+
+            app.UseCors("CorsPolicy");
 
             app.UseRouting();
 

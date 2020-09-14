@@ -11,6 +11,7 @@ namespace Beltzac.AIPlay.App.Api.Hubs
     {
         public Task RegisterForProcessingStatusUpdate(string message)
         {
+            Console.WriteLine($"From signalr -> {message}");
             return Task.CompletedTask;
         }
 
