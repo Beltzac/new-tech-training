@@ -252,5 +252,6 @@ WiX.Toolset.DummyFile.txt
 GitHubVS.sln.DotSettings
 
 #não fazer upload dessa pasta ainda pois não é meu código (TODO: fazer clone no docker file)
-/Lip/
+/Lip/Wav2Lip/
 wwwroot/
+/Lip/.vscode
