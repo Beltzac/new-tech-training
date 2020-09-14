@@ -33,6 +33,33 @@
     </div>
 </div>
 
+<form id="upload" action="http://localhost:10000/api/Lip" method="POST" enctype="multipart/form-data">
+
+    <fieldset>
+    <legend>HTML File Upload</legend>
+    
+    <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="300000" />
+    
+    <div>
+        <label for="image">Files to upload:</label>
+        <input type="file" id="image" name="image" />
+        <div id="filedrag_image">or drop files here</div>
+    </div>
+
+    <div>
+        <label for="audio">Files to upload:</label>
+        <input type="file" id="audio" name="audio" />
+        <div id="filedrag_audio">or drop files here</div>
+    </div>
+    
+    <div id="submitbutton">
+        <button type="submit">Upload Files</button>
+    </div>
+    
+    </fieldset>
+
+</form>
+
 <script>
     var app = new Vue({
         el: '#app',
@@ -68,4 +95,15 @@
         });
         event.preventDefault();
     });
+
+
+    const contactForm = document.getElementById("upload");
+    contactForm.addEventListener("submit", function(event) {
+        event.preventDefault();     
+        var formData = new FormData(contactForm);
+        var xhr = new XMLHttpRequest();
+        // Add any event handlers here...
+        xhr.open('POST', 'http://localhost:10000/api/Lip', true);
+        xhr.send(formData);
+    });  
 </script>
