@@ -18,7 +18,7 @@ namespace Beltzac.AIPlay.App.Api.Hubs
         public Task OnUpdateProcessingStatus(StatusUpdate message)
         {
             Console.WriteLine($"Message received -> {message.ProcessId} {message.PercentageProcessed} {message.Message}");
-            return Clients.All.SendAsync("OnUpdateProcessingStatus", message.PercentageProcessed + "% - " + message.Message);
+            return Clients.All.SendAsync("OnUpdateProcessingStatus", message);
         }
     }
 }

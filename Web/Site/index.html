@@ -73,11 +73,18 @@
     //Disable send button until connection is established
     document.getElementById("sendButton").disabled = true;
 
-    connection.on("OnUpdateProcessingStatus", function (message) {
-        console.log(message);
+    connection.on("OnUpdateProcessingStatus", function (status) {
+        console.log(status);
         var li = document.createElement("li");
-        li.textContent = message;
+        li.textContent = status.message;
         document.getElementById("messagesList").appendChild(li);
+
+        if(status.percentageProcessed == 100){        
+            console.log("Finalizado!");    
+            var liDownload = document.createElement("li");
+            liDownload.innerHTML = "<a href=\"" + "http://localhost:10000/api/Lip/" + status.processId + "\" download> download </a>";
+            document.getElementById("messagesList").appendChild(liDownload);     
+        }
     });
 
     connection.start().then(function () {
