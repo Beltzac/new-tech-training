@@ -18,19 +18,21 @@ namespace Beltzac.AIPlay.App.Api.Controllers
     {
         private readonly IRabbitMQHelper _bus;
         private readonly LipHub _hub;
+        private readonly IFileApi _file;
+
         public LipController(IRabbitMQHelper bus, LipHub hub)
         {
             _bus = bus;
             _hub = hub;
+            //TODO: colocar na injeção de dependência
+            _file = RestService.For<IFileApi>("http://file/");
         }
 
         [HttpPost]
         public async Task<IActionResult> Post(IFormFile image, IFormFile audio)
         {
             if (image != null && audio != null)
-            {
-                var fileApi = RestService.For<IFileApi>("http://file/");
-
+            {           
                 var idRequest = Guid.NewGuid();
 
                 Console.WriteLine($"Files received -> {idRequest}");
@@ -41,14 +43,14 @@ namespace Beltzac.AIPlay.App.Api.Controllers
                 using (var ms = new MemoryStream())
                 {
                     image.CopyTo(ms);
-                    idImage = await fileApi.UploadFile(new ByteArrayPart(ms.ToArray(), image.FileName, image.ContentType));
+                    idImage = await _file.UploadFileAsync(new ByteArrayPart(ms.ToArray(), image.FileName, image.ContentType));
                 }
 
                 var idAudio = Guid.Empty;
                 using (var ms = new MemoryStream())
                 {
                     audio.CopyTo(ms);
-                    idAudio = await fileApi.UploadFile(new ByteArrayPart(ms.ToArray(), audio.FileName, audio.ContentType));     
+                    idAudio = await _file.UploadFileAsync(new ByteArrayPart(ms.ToArray(), audio.FileName, audio.ContentType));     
                 }
 
                 //put in queue
@@ -69,6 +71,20 @@ namespace Beltzac.AIPlay.App.Api.Controllers
             }
 
             return BadRequest();
+        }
+
+        //TODO: aqui está deixando buscar qualquer arquivo, problema de segurança
+        //TODO: erro se arquivo não encontrado
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(Guid id)
+        {
+            if (id == Guid.Empty)
+                return BadRequest();
+
+            var content = await _file.DownloadFileAsync(id);      
+            byte[] bytes = await content.ReadAsByteArrayAsync();
+            var fileName = content.Headers.ContentDisposition.FileName;
+            return File(bytes, "application/octet-stream", fileName);
         }
     }
 }

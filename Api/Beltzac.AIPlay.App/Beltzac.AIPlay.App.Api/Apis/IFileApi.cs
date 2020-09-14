@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Beltzac.AIPlay.App.Api.Apis
@@ -12,6 +13,9 @@ namespace Beltzac.AIPlay.App.Api.Apis
     {
         [Multipart]
         [Post("/api/file")]
-        Task<Guid> UploadFile(ByteArrayPart file);
+        Task<Guid> UploadFileAsync(ByteArrayPart file);
+
+        [Get("/api/file/{id}")]
+        Task<HttpContent> DownloadFileAsync(Guid id);
     }
 }
