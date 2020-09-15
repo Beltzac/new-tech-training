@@ -2,115 +2,86 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.8/signalr.js" integrity="sha512-voPGnBpu0u6VeIbRafB3L0kgqdESj1drPzsqY2JwDOYmT0/j4x8Hb1Qdrj3X+YPHO1fvHldsH9Jf82vvKDq1eg==" crossorigin="anonymous"></script>
 
 <div id="app">
-    {{ message }}
-</div>
 
-<div class="container">
-    <div class="row">&nbsp;</div>
-    <div class="row">
-        <div class="col-2">User</div>
-        <div class="col-4"><input type="text" id="userInput" /></div>
-    </div>
-    <div class="row">
-        <div class="col-2">Message</div>
-        <div class="col-4"><input type="text" id="messageInput" /></div>
-    </div>
-    <div class="row">&nbsp;</div>
+    <form v-on:submit.prevent="postForm" enctype="multipart/form-data">
+
+        <fieldset>
+            
+            <legend>Lip Sync</legend>
+            
+            <div>
+                <label for="image">Imagem:</label>
+                <input type="file" id="image" name="image" />
+                <div id="filedrag_image">or drop files here</div>
+            </div>
+        
+            <div>
+                <label for="audio">Audio:</label>
+                <input type="file" id="audio" name="audio" />
+                <div id="filedrag_audio">or drop files here</div>
+            </div>        
+        
+            <button :disabled='!canSubmit' id="sendButton" type="submit">Begin!</button>
+
+        </fieldset>
+    
+    </form>
+    
     <div class="row">
         <div class="col-6">
-            <input type="button" id="sendButton" value="Send Message" />
+
+              <ul>
+                <li v-for="s in statuses">
+
+                    <template v-if="s.percentageProcessed == 100">
+                        <a :href="'http://localhost:10000/api/Lip/' + s.processId" download> download </a>
+                    </template>
+
+                    <template v-else>
+                        {{ s.message }}
+                    </template>
+
+                </li>
+              </ul>
+
         </div>
     </div>
+
 </div>
-<div class="row">
-    <div class="col-12">
-        <hr />
-    </div>
-</div>
-<div class="row">
-    <div class="col-6">
-        <ul id="messagesList"></ul>
-    </div>
-</div>
-
-<form id="upload" action="http://localhost:10000/api/Lip" method="POST" enctype="multipart/form-data">
-
-    <fieldset>
-    <legend>HTML File Upload</legend>
-    
-    <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="300000" />
-    
-    <div>
-        <label for="image">Files to upload:</label>
-        <input type="file" id="image" name="image" />
-        <div id="filedrag_image">or drop files here</div>
-    </div>
-
-    <div>
-        <label for="audio">Files to upload:</label>
-        <input type="file" id="audio" name="audio" />
-        <div id="filedrag_audio">or drop files here</div>
-    </div>
-    
-    <div id="submitbutton">
-        <button type="submit">Upload Files</button>
-    </div>
-    
-    </fieldset>
-
-</form>
 
 <script>
     var app = new Vue({
         el: '#app',
         data: {
-            message: 'Hello Vue!'
+            canSubmit: false,
+            statuses: []
+        },
+        methods: {
+            postForm: function (event) {
+                var formData = new FormData(event.target);
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:10000/api/Lip', true);
+                xhr.send(formData);
+                connection.invoke("RegisterForProcessingStatusUpdate", "message").catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
         }
     })    
 
     var connection = new signalR.HubConnectionBuilder().withUrl("http://localhost:10000/lipHub").build();
 
-    //Disable send button until connection is established
-    document.getElementById("sendButton").disabled = true;
-
-    connection.on("OnUpdateProcessingStatus", function (status) {
-        console.log(status);
-        var li = document.createElement("li");
-        li.textContent = status.message;
-        document.getElementById("messagesList").appendChild(li);
-
-        if(status.percentageProcessed == 100){        
-            console.log("Finalizado!");    
-            var liDownload = document.createElement("li");
-            liDownload.innerHTML = "<a href=\"" + "http://localhost:10000/api/Lip/" + status.processId + "\" download> download </a>";
-            document.getElementById("messagesList").appendChild(liDownload);     
-        }
-    });
-
+    //Disable send button until connection is established  
+    app.canSubmit = false;
     connection.start().then(function () {
-        document.getElementById("sendButton").disabled = false;
+        app.canSubmit = true;
     }).catch(function (err) {
         return console.error(err.toString());
     });
 
-    document.getElementById("sendButton").addEventListener("click", function (event) {
-        //var user = document.getElementById("userInput").value;
-        var message = document.getElementById("messageInput").value;
-        //connection.invoke("SendMessage", user, message).catch(function (err) {
-        connection.invoke("RegisterForProcessingStatusUpdate", message).catch(function (err) {
-            return console.error(err.toString());
-        });
-        event.preventDefault();
+    connection.on("OnUpdateProcessingStatus", function (status) {        
+        console.log(status);
+        app.statuses.push(status);
     });
-
-
-    const contactForm = document.getElementById("upload");
-    contactForm.addEventListener("submit", function(event) {
-        event.preventDefault();     
-        var formData = new FormData(contactForm);
-        var xhr = new XMLHttpRequest();
-        // Add any event handlers here...
-        xhr.open('POST', 'http://localhost:10000/api/Lip', true);
-        xhr.send(formData);
-    });  
+    
 </script>
