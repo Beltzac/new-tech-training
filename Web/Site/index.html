@@ -34,7 +34,16 @@
                 <li v-for="s in statuses">
 
                     <template v-if="s.percentageProcessed == 100">
-                        <a :href="'http://localhost:10000/api/Lip/' + s.processId" download> download </a>
+
+                        <template>
+                            <div class="video-wrap">
+                              <video controls="true">
+                                <source :src="s.url" type="video/mp4">
+                              </video>
+                            </div>
+                        </template>
+
+                        <a :href="s.url" download> download </a>
                     </template>
 
                     <template v-else>
@@ -81,6 +90,7 @@
 
     connection.on("OnUpdateProcessingStatus", function (status) {        
         console.log(status);
+        status.url = 'http://localhost:10000/api/Lip/' + s.status
         app.statuses.push(status);
     });
     
